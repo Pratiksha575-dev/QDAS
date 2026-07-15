@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} frmAnalysisConfig 
    Caption         =   "QDAS-Configure analysis"
-   ClientHeight    =   9350.001
+   ClientHeight    =   12440
    ClientLeft      =   110
    ClientTop       =   450
    ClientWidth     =   14390

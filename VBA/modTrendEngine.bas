@@ -29,12 +29,12 @@ End Function
 '==================================================
 ' Builds Trend Query M Code
 '==================================================
-Function BuildTrendMCode(ByVal TrendType As String) As String
+Function BuildTrendMCode(ByVal trendType As String) As String
 
     Dim MCode As String
     Dim DateExpression As String
 
-    Select Case TrendType
+    Select Case trendType
 
         Case "Hourly"
             DateExpression = "DateTime.Hour([" & SelectedDate & "])"
@@ -53,7 +53,7 @@ Function BuildTrendMCode(ByVal TrendType As String) As String
 
         Case Else
 
-            MsgBox "Unknown Trend Type : " & TrendType
+            MsgBox "Unknown Trend Type : " & trendType
             Exit Function
 
     End Select
@@ -82,9 +82,9 @@ End Function
 '==================================================
 ' Updates One Trend Query
 '==================================================
-Sub UpdateTrendQuery(QueryName As String, TrendType As String)
+Sub UpdateTrendQuery(QueryName As String, trendType As String)
 
-    UpdateQuery QueryName, BuildTrendMCode(TrendType)
+    UpdateQuery QueryName, BuildTrendMCode(trendType)
 
 End Sub
 
@@ -97,7 +97,7 @@ Sub GenerateAllTrendQueries()
 
     ReadConfiguration
 
-    If Trends.Count = 0 Then
+    If Trends.count = 0 Then
         MsgBox "Please select at least one Trend."
         Exit Sub
     End If

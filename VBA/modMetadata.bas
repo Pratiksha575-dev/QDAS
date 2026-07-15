@@ -27,7 +27,7 @@ Sub GenerateMetadata()
     Dim c As Long
     Dim r As Long
 
-    Dim ColName As String
+    Dim colName As String
     Dim DataType As String
     Dim Role As String
 
@@ -36,18 +36,18 @@ Sub GenerateMetadata()
 
     CreateMetadata
 
-    LastCol = wsPreview.Cells(1, wsPreview.Columns.Count).End(xlToLeft).Column
-    LastRow = wsPreview.Cells(wsPreview.Rows.Count, 1).End(xlUp).Row
+    LastCol = wsPreview.Cells(1, wsPreview.Columns.count).End(xlToLeft).Column
+    LastRow = wsPreview.Cells(wsPreview.Rows.count, 1).End(xlUp).Row
 
     For c = 1 To LastCol
 
-        ColName = wsPreview.Cells(1, c).Value
+        colName = wsPreview.Cells(1, c).Value
 
         DataType = DetectColumnType(wsPreview, c, LastRow)
 
-        Role = SuggestRole(ColName, DataType)
+        Role = SuggestRole(colName, DataType)
 
-        wsMeta.Cells(c + 1, 1).Value = ColName
+        wsMeta.Cells(c + 1, 1).Value = colName
         wsMeta.Cells(c + 1, 2).Value = DataType
         wsMeta.Cells(c + 1, 3).Value = Role
         wsMeta.Cells(c + 1, 4).Value = Role
@@ -57,7 +57,7 @@ Sub GenerateMetadata()
 
 End Sub
 
-Private Function DetectColumnType(ws As Worksheet, Col As Long, LastRow As Long) As String
+Private Function DetectColumnType(ws As Worksheet, col As Long, LastRow As Long) As String
 
     Dim r As Long
     Dim NumCount As Long
@@ -68,7 +68,7 @@ Private Function DetectColumnType(ws As Worksheet, Col As Long, LastRow As Long)
 
     For r = 2 To LastRow
 
-        v = ws.Cells(r, Col).Value
+        v = ws.Cells(r, col).Value
 
         If Trim(v) <> "" Then
 
@@ -108,18 +108,18 @@ End Function
 
 Private Function SuggestRole(ColumnName As String, DataType As String) As String
 
-    Dim Col As String
+    Dim col As String
 
-    Col = LCase(Trim(ColumnName))
+    col = LCase(Trim(ColumnName))
 
     '=========================
     ' DATE COLUMNS
     '=========================
-    If InStr(Col, "date") > 0 _
-    Or InStr(Col, "time") > 0 _
-    Or InStr(Col, "year") > 0 _
-    Or InStr(Col, "month") > 0 _
-    Or InStr(Col, "day") > 0 Then
+    If InStr(col, "date") > 0 _
+    Or InStr(col, "time") > 0 _
+    Or InStr(col, "year") > 0 _
+    Or InStr(col, "month") > 0 _
+    Or InStr(col, "day") > 0 Then
 
         SuggestRole = "Date"
         Exit Function
@@ -129,19 +129,19 @@ Private Function SuggestRole(ColumnName As String, DataType As String) As String
     '=========================
     ' CATEGORY COLUMNS
     '=========================
-    If Right(Col, 2) = "id" _
-    Or InStr(Col, "code") > 0 _
-    Or InStr(Col, "type") > 0 _
-    Or InStr(Col, "category") > 0 _
-    Or InStr(Col, "city") > 0 _
-    Or InStr(Col, "country") > 0 _
-    Or InStr(Col, "state") > 0 _
-    Or InStr(Col, "region") > 0 _
-    Or InStr(Col, "vendor") > 0 _
-    Or InStr(Col, "department") > 0 _
-    Or InStr(Col, "gender") > 0 _
-    Or InStr(Col, "payment") > 0 _
-    Or InStr(Col, "location") > 0 Then
+    If Right(col, 2) = "id" _
+    Or InStr(col, "code") > 0 _
+    Or InStr(col, "type") > 0 _
+    Or InStr(col, "category") > 0 _
+    Or InStr(col, "city") > 0 _
+    Or InStr(col, "country") > 0 _
+    Or InStr(col, "state") > 0 _
+    Or InStr(col, "region") > 0 _
+    Or InStr(col, "vendor") > 0 _
+    Or InStr(col, "department") > 0 _
+    Or InStr(col, "gender") > 0 _
+    Or InStr(col, "payment") > 0 _
+    Or InStr(col, "location") > 0 Then
 
         SuggestRole = "Category"
         Exit Function
@@ -170,7 +170,7 @@ Sub LoadMetadataToForm()
 
     Set ws = Worksheets("Metadata")
 
-    LastRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
+    LastRow = ws.Cells(ws.Rows.count, 1).End(xlUp).Row
 
     With frmAnalysisConfig
 

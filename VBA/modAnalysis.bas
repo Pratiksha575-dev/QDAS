@@ -27,7 +27,7 @@ Sub GenerateAnalysisSummary()
     wsAnalysis.Range("A4").Value = "Dataset"
     wsAnalysis.Range("B4").Value = SelectedFile
 
-    LastRow = wsConfig.Cells(wsConfig.Rows.Count, 1).End(xlUp).Row
+    LastRow = wsConfig.Cells(wsConfig.Rows.count, 1).End(xlUp).Row
 
     For i = 2 To LastRow
 

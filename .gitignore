@@ -1,0 +1,5 @@
+# Ignore datasets
+Documentation/
+
+# Ignore Excel temporary files
+Excel/~$*.xlsm
