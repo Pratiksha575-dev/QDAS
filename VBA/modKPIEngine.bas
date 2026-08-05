@@ -1,70 +1,82 @@
 Attribute VB_Name = "modKPIEngine"
 Option Explicit
 
-Function BuildKPIMCode() As String
+'=========================================================
+' Build KPI M Code
+'=========================================================
+Public Function BuildKPIMCode() As String
 
+    Dim item As Variant
+    Dim MeasureList As String
     Dim MCode As String
-    Dim KPIRows As String
-    Dim Item As Variant
 
-    ReadConfiguration
+    MeasureList = "{"
 
-    KPIRows = ""
+    For Each item In Measures
+        MeasureList = MeasureList & """" & item & ""","
+    Next item
 
-    For Each Item In Measures
+    If Right(MeasureList, 1) = "," Then
+        MeasureList = Left(MeasureList, Len(MeasureList) - 1)
+    End If
 
-        KPIRows = KPIRows & _
-        "        [Measure=""" & Item & """, KPI=""Total"", Value=List.Sum(Source[" & Item & "])]," & vbCrLf
-
-        KPIRows = KPIRows & _
-        "        [Measure=""" & Item & """, KPI=""Average"", Value=List.Average(Source[" & Item & "])]," & vbCrLf
-
-        KPIRows = KPIRows & _
-        "        [Measure=""" & Item & """, KPI=""Minimum"", Value=List.Min(Source[" & Item & "])]," & vbCrLf
-
-        KPIRows = KPIRows & _
-        "        [Measure=""" & Item & """, KPI=""Maximum"", Value=List.Max(Source[" & Item & "])]," & vbCrLf
-
-        KPIRows = KPIRows & _
-        "        [Measure=""" & Item & """, KPI=""Count"", Value=List.Count(Source[" & Item & "])]," & vbCrLf
-
-    Next Item
-
-    'Remove the final comma
-    KPIRows = Left(KPIRows, Len(KPIRows) - 3)
+    MeasureList = MeasureList & "}"
+    
 
     MCode = ""
+
     MCode = MCode & "let" & vbCrLf
-    MCode = MCode & "    Source = #""nyc-taxidata""," & vbCrLf
-    MCode = MCode & "    KPIList = {" & vbCrLf
-    MCode = MCode & KPIRows & vbCrLf
-    MCode = MCode & "    }," & vbCrLf
-    MCode = MCode & "    Output = Table.FromRecords(KPIList)" & vbCrLf
+    MCode = MCode & "    Source = PQ_RawData," & vbCrLf
+    MCode = MCode & "    Measure = " & MeasureList & "{0}," & vbCrLf
+    MCode = MCode & "    Values = List.RemoveNulls(Table.Column(Source, Measure))," & vbCrLf
+    MCode = MCode & "    CountValue = List.Count(Values)," & vbCrLf
+    MCode = MCode & "    TotalValue = if CountValue = 0 then null else List.Sum(Values)," & vbCrLf
+    MCode = MCode & "    AverageValue = if CountValue = 0 then null else List.Average(Values)," & vbCrLf
+    MCode = MCode & "    MinimumValue = if CountValue = 0 then null else List.Min(Values)," & vbCrLf
+    MCode = MCode & "    MaximumValue = if CountValue = 0 then null else List.Max(Values)," & vbCrLf
+
+    MCode = MCode & "    Output = #table(" & vbCrLf
+    MCode = MCode & "        {""Measure"", ""Count"", ""Total"", ""Average"", ""Minimum"", ""Maximum""}," & vbCrLf
+    MCode = MCode & "        {{" & _
+            "Measure," & _
+            "CountValue," & _
+            "TotalValue," & _
+            "AverageValue," & _
+            "MinimumValue," & _
+            "MaximumValue}}" & vbCrLf
+    MCode = MCode & "    )" & vbCrLf
+
     MCode = MCode & "in" & vbCrLf
     MCode = MCode & "    Output"
 
     BuildKPIMCode = MCode
 
 End Function
-Sub TestKPIMCode()
-
-    Debug.Print BuildKPIMCode()
-
-End Sub
-
-Sub UpdateKPIQuery()
+'=========================================================
+' Update KPI Query
+'=========================================================
+Public Sub UpdateKPIQuery()
 
     UpdateQuery "PQ_KPI", BuildKPIMCode()
 
 End Sub
 
-Sub GenerateKPIQuery()
+'=========================================================
+' Generate KPI
+'=========================================================
+Public Sub GenerateKPIQuery()
 
-    
     ReadConfiguration
+
+    If Measures.count = 0 Then
+
+        MsgBox "Please select at least one Measure.", vbExclamation
+        Exit Sub
+
+    End If
 
     UpdateKPIQuery
 
-    MsgBox "KPI Query Generated Successfully."
+    MsgBox "KPI Query Generated Successfully.", vbInformation
 
 End Sub

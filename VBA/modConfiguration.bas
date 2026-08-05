@@ -20,36 +20,48 @@ Public ShowDashTrend As Boolean
 Public ShowDashCategory As Boolean
 Public ShowDashDistribution As Boolean
 Public ShowDashAnomaly As Boolean
-
-
 Sub SaveConfiguration()
-    
+
     Dim ws As Worksheet
     Dim i As Long
     Dim RowNum As Long
 
-    Set ws = Worksheets("Config")
+    Set ws = GetOrCreateWorksheet("Config")
 
     ws.Cells.Clear
 
-    ws.Range("A1").Value = "Setting"
-    ws.Range("B1").Value = "Value"
-    ws.Range("C1").Value = "Selected"
+    ws.Range("A1").value = "Setting"
+    ws.Range("B1").value = "Value"
+
+    With ws.Range("A1:B1")
+        .Font.Bold = True
+        .Interior.Color = RGB(220, 230, 241)
+    End With
 
     RowNum = 2
 
-    'Date Column
-    ws.Cells(RowNum, 1).Value = "Date Column"
-    ws.Cells(RowNum, 2).Value = frmAnalysisConfig.cmbDate.Value
+    '-------------------------
+    ' Date Column
+    '-------------------------
+    ws.Cells(RowNum, 1).value = "Date Column"
+
+    If frmAnalysisConfig.cmbDate.ListIndex <> -1 Then
+        ws.Cells(RowNum, 2).value = frmAnalysisConfig.cmbDate.value
+    Else
+        ws.Cells(RowNum, 2).value = ""
+    End If
+
     RowNum = RowNum + 1
 
-    'Measures
+    '-------------------------
+    ' Measures
+    '-------------------------
     For i = 0 To frmAnalysisConfig.lstMeasures.ListCount - 1
 
         If frmAnalysisConfig.lstMeasures.Selected(i) Then
 
-            ws.Cells(RowNum, 1).Value = "Measure"
-            ws.Cells(RowNum, 2).Value = frmAnalysisConfig.lstMeasures.List(i)
+            ws.Cells(RowNum, 1).value = "Measure"
+            ws.Cells(RowNum, 2).value = frmAnalysisConfig.lstMeasures.List(i)
 
             RowNum = RowNum + 1
 
@@ -57,13 +69,15 @@ Sub SaveConfiguration()
 
     Next i
 
-    'Categories
+    '-------------------------
+    ' Categories
+    '-------------------------
     For i = 0 To frmAnalysisConfig.lstCategory.ListCount - 1
 
         If frmAnalysisConfig.lstCategory.Selected(i) Then
 
-            ws.Cells(RowNum, 1).Value = "Category"
-            ws.Cells(RowNum, 2).Value = frmAnalysisConfig.lstCategory.List(i)
+            ws.Cells(RowNum, 1).value = "Category"
+            ws.Cells(RowNum, 2).value = frmAnalysisConfig.lstCategory.List(i)
 
             RowNum = RowNum + 1
 
@@ -71,104 +85,52 @@ Sub SaveConfiguration()
 
     Next i
 
-    'Trend Analysis
-    If frmAnalysisConfig.chkDaily.Value Then
-        ws.Cells(RowNum, 1) = "Trend"
-        ws.Cells(RowNum, 2) = "Daily"
-        RowNum = RowNum + 1
-    End If
+    '-------------------------
+    ' Trend (Fixed Rows)
+    '-------------------------
 
-    If frmAnalysisConfig.chkWeekly.Value Then
-        ws.Cells(RowNum, 1) = "Trend"
-        ws.Cells(RowNum, 2) = "Weekly"
-        RowNum = RowNum + 1
-    End If
-
-    If frmAnalysisConfig.chkMonthly.Value Then
-        ws.Cells(RowNum, 1) = "Trend"
-        ws.Cells(RowNum, 2) = "Monthly"
-        RowNum = RowNum + 1
-    End If
-
-    If frmAnalysisConfig.chkHourly.Value Then
-        ws.Cells(RowNum, 1) = "Trend"
-        ws.Cells(RowNum, 2) = "Hourly"
-        RowNum = RowNum + 1
-    End If
-
-    If frmAnalysisConfig.chkWeekday.Value Then
-        ws.Cells(RowNum, 1) = "Trend"
-        ws.Cells(RowNum, 2) = "Weekday"
-        RowNum = RowNum + 1
-    End If
-
- 'Distribution Mode
-  ws.Cells(RowNum, 1).Value = "Distribution Mode"
-
-  If frmAnalysisConfig.optAutoBins.Value Then
-       ws.Cells(RowNum, 2).Value = "Auto"
-  Else
-       ws.Cells(RowNum, 2).Value = "Custom"
-  End If
-
-  RowNum = RowNum + 1
-
-  'Distribution Bins
-   ws.Cells(RowNum, 1).Value = "Distribution Bins"
-
-   If frmAnalysisConfig.optAutoBins.Value Then
-    ws.Cells(RowNum, 2).Value = 20
-  Else
-    ws.Cells(RowNum, 2).Value = CLng(frmAnalysisConfig.txtBins.Value)
-   End If
-
-    RowNum = RowNum + 1
-
-    'Anomaly Method
-    ws.Cells(RowNum, 1).Value = "Anomaly"
-
-    If frmAnalysisConfig.optIQR.Value Then
-        ws.Cells(RowNum, 2).Value = "IQR"
+    ws.Cells(RowNum, 1).value = "Trend"
+    If frmAnalysisConfig.chkDaily.Enabled And frmAnalysisConfig.chkDaily.value Then
+        ws.Cells(RowNum, 2).value = "Daily"
     Else
-        ws.Cells(RowNum, 2).Value = "Z-Score"
+        ws.Cells(RowNum, 2).value = ""
     End If
-    
     RowNum = RowNum + 1
-'Dashboard - KPI
-ws.Cells(RowNum, 1).Value = "Dashboard"
-ws.Cells(RowNum, 2).Value = "KPI"
-ws.Cells(RowNum, 3).Value = frmAnalysisConfig.chkDashKPI.Value
-RowNum = RowNum + 1
 
-'Dashboard - Trend
-ws.Cells(RowNum, 1).Value = "Dashboard"
-ws.Cells(RowNum, 2).Value = "Trend"
-ws.Cells(RowNum, 3).Value = frmAnalysisConfig.chkDashTrend.Value
-RowNum = RowNum + 1
+    ws.Cells(RowNum, 1).value = "Trend"
+    If frmAnalysisConfig.chkMonthly.Enabled And frmAnalysisConfig.chkMonthly.value Then
+        ws.Cells(RowNum, 2).value = "Monthly"
+    Else
+        ws.Cells(RowNum, 2).value = ""
+    End If
+    RowNum = RowNum + 1
 
-'Dashboard - Category
-ws.Cells(RowNum, 1).Value = "Dashboard"
-ws.Cells(RowNum, 2).Value = "Category"
-ws.Cells(RowNum, 3).Value = frmAnalysisConfig.chkDashCategory.Value
-RowNum = RowNum + 1
+    ws.Cells(RowNum, 1).value = "Trend"
+    If frmAnalysisConfig.chkWeekday.Enabled And frmAnalysisConfig.chkWeekday.value Then
+        ws.Cells(RowNum, 2).value = "Weekday"
+    Else
+        ws.Cells(RowNum, 2).value = ""
+    End If
+    RowNum = RowNum + 1
 
-'Dashboard - Distribution
-ws.Cells(RowNum, 1).Value = "Dashboard"
-ws.Cells(RowNum, 2).Value = "Distribution"
-ws.Cells(RowNum, 3).Value = frmAnalysisConfig.chkDashDistribution.Value
-RowNum = RowNum + 1
+    '-------------------------
+    ' Anomaly
+    '-------------------------
 
-'Dashboard - Anomaly
-ws.Cells(RowNum, 1).Value = "Dashboard"
-ws.Cells(RowNum, 2).Value = "Anomaly"
-ws.Cells(RowNum, 3).Value = frmAnalysisConfig.chkDashAnomaly.Value
+    ws.Cells(RowNum, 1).value = "Anomaly"
+
+    If frmAnalysisConfig.optIQR.value Then
+        ws.Cells(RowNum, 2).value = "IQR"
+    Else
+        ws.Cells(RowNum, 2).value = "Z-Score"
+    End If
 
 End Sub
 
 Sub ReadConfiguration()
 
     Dim ws As Worksheet
-    Dim LastRow As Long
+    Dim lastRow As Long
     Dim i As Long
 
     Set ws = Worksheets("Config")
@@ -176,62 +138,33 @@ Sub ReadConfiguration()
     Set Measures = New Collection
     Set Categories = New Collection
     Set Trends = New Collection
+    SelectedDate = ""
+    SelectedAnomaly = ""
+    
 
-    'Reset Dashboard Options
-    ShowDashKPI = False
-    ShowDashTrend = False
-    ShowDashCategory = False
-    ShowDashDistribution = False
-    ShowDashAnomaly = False
+    lastRow = ws.Cells(ws.Rows.count, "A").End(xlUp).Row
 
-    LastRow = ws.Cells(ws.Rows.count, "A").End(xlUp).Row
+    For i = 2 To lastRow
 
-    For i = 2 To LastRow
-
-        Select Case ws.Cells(i, 1).Value
+        Select Case ws.Cells(i, 1).value
 
             Case "Date Column"
-                SelectedDate = ws.Cells(i, 2).Value
+                SelectedDate = ws.Cells(i, 2).value
 
             Case "Measure"
-                Measures.Add ws.Cells(i, 2).Value
+                Measures.Add ws.Cells(i, 2).value
 
             Case "Category"
-                Categories.Add ws.Cells(i, 2).Value
+                Categories.Add ws.Cells(i, 2).value
 
             Case "Trend"
-                Trends.Add ws.Cells(i, 2).Value
+
+          If Trim(ws.Cells(i, 2).value) <> "" Then
+             Trends.Add ws.Cells(i, 2).value
+          End If
 
             Case "Anomaly"
-                SelectedAnomaly = ws.Cells(i, 2).Value
-
-            Case "Distribution Mode"
-                DistributionMode = ws.Cells(i, 2).Value
-
-            Case "Distribution Bins"
-                DistributionBins = CLng(ws.Cells(i, 2).Value)
-
-            Case "Dashboard"
-
-                Select Case ws.Cells(i, 2).Value
-
-                    Case "KPI"
-                        ShowDashKPI = CBool(ws.Cells(i, 3).Value)
-
-                    Case "Trend"
-                        ShowDashTrend = CBool(ws.Cells(i, 3).Value)
-
-                    Case "Category"
-                        ShowDashCategory = CBool(ws.Cells(i, 3).Value)
-
-                    Case "Distribution"
-                        ShowDashDistribution = CBool(ws.Cells(i, 3).Value)
-
-                    Case "Anomaly"
-                        ShowDashAnomaly = CBool(ws.Cells(i, 3).Value)
-
-                End Select
-
+                SelectedAnomaly = ws.Cells(i, 2).value
         End Select
 
     Next i
@@ -240,7 +173,7 @@ End Sub
 
 Sub TestConfiguration()
 
-    Dim Item As Variant
+    Dim item As Variant
 
     ReadConfiguration
 
@@ -248,38 +181,24 @@ Sub TestConfiguration()
 
     Debug.Print "Measures"
 
-    For Each Item In Measures
-        Debug.Print Item
-    Next Item
+    For Each item In Measures
+        Debug.Print item
+    Next item
 
     Debug.Print "Categories"
 
-    For Each Item In Categories
-        Debug.Print Item
-    Next Item
+    For Each item In Categories
+        Debug.Print item
+    Next item
 
     Debug.Print "Trend"
 
-    For Each Item In Trends
-        Debug.Print Item
-    Next Item
+    For Each item In Trends
+        Debug.Print item
+    Next item
 
     Debug.Print "Anomaly"
 
     Debug.Print SelectedAnomaly
-
-    Debug.Print "Distribution"
-
-    Debug.Print DistributionMode
-
-    Debug.Print DistributionBins
-
-    Debug.Print "Dashboard"
-
-    Debug.Print ShowDashKPI
-    Debug.Print ShowDashTrend
-    Debug.Print ShowDashCategory
-    Debug.Print ShowDashDistribution
-    Debug.Print ShowDashAnomaly
 
 End Sub

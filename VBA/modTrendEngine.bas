@@ -1,147 +1,160 @@
 Attribute VB_Name = "modTrendEngine"
 Option Explicit
 
-'==================================================
-' Builds aggregation part of M Code
-'==================================================
-Function BuildMeasureAggregation() As String
+'=========================================================
+' Build Aggregation
+'=========================================================
+Private Function BuildMeasureAggregation() As String
 
-    Dim Item As Variant
-    Dim Agg As String
+    Dim MeasureName As String
 
-    Agg = ""
+    MeasureName = Measures.item(1)
 
-    For Each Item In Measures
+    BuildMeasureAggregation = _
+        "{""Measure"", each List.Sum([" & MeasureName & "]), type number}"
 
-        Agg = Agg & _
-        "{""Sum_" & Item & """, each List.Sum([" & Item & "]), type number},"
-
-    Next Item
-
-    If Right(Agg, 1) = "," Then
-        Agg = Left(Agg, Len(Agg) - 1)
-    End If
-
-    BuildMeasureAggregation = Agg
 
 End Function
-
-'==================================================
-' Builds Trend Query M Code
-'==================================================
-Function BuildTrendMCode(ByVal trendType As String) As String
+'=========================================================
+' Build Trend M Code
+'=========================================================
+Public Function BuildTrendMCode(ByVal TrendType As String) As String
 
     Dim MCode As String
     Dim DateExpression As String
+    Dim ReturnType As String
+    Dim TrendColumn As String
 
-    Select Case trendType
+    TrendColumn = "Trend"
 
-        Case "Hourly"
-            DateExpression = "DateTime.Hour([" & SelectedDate & "])"
+    Select Case TrendType
 
         Case "Daily"
-            DateExpression = "Date.From([" & SelectedDate & "])"
 
-        Case "Weekly"
-            DateExpression = "Date.StartOfWeek(Date.From([" & SelectedDate & "]))"
+            DateExpression = "Date.From([" & SelectedDate & "])"
+            ReturnType = "type date"
+
 
         Case "Monthly"
+
             DateExpression = "Date.StartOfMonth(Date.From([" & SelectedDate & "]))"
+            ReturnType = "type date"
 
         Case "Weekday"
+
             DateExpression = "Date.DayOfWeekName(Date.From([" & SelectedDate & "]))"
+            ReturnType = "type text"
 
         Case Else
 
-            MsgBox "Unknown Trend Type : " & trendType
-            Exit Function
+            Err.Raise vbObjectError + 1001, _
+                      "BuildTrendMCode", _
+                      "Unknown Trend Type : " & TrendType
 
     End Select
 
-    MCode = ""
+    MCode = _
+    "let" & vbCrLf & _
+    "    Source = PQ_RawData," & vbCrLf & _
+    "    AddTrend = Table.AddColumn(Source, ""Trend"", each " & DateExpression & ", " & ReturnType & ")," & vbCrLf & _
+    "    Grouped = Table.Group(AddTrend,{""Trend""},{" & BuildMeasureAggregation() & "})," & vbCrLf
 
-    MCode = MCode & "let" & vbCrLf
+    Select Case TrendType
 
-    MCode = MCode & _
-        "    Source = #""nyc-taxidata""," & vbCrLf
+        Case "Daily", "Monthly"
 
-    MCode = MCode & _
-        "    #""Grouped Rows"" = Table.Group(" & _
-        "Table.AddColumn(Source,""Trend"", each " & _
-        DateExpression & "),{""Trend""},{" & _
-        BuildMeasureAggregation & "})" & vbCrLf
+            MCode = MCode & _
+            "    Sorted = Table.Sort(Grouped,{{""Trend"", Order.Ascending}})" & vbCrLf & _
+            "in" & vbCrLf & _
+            "    Sorted"
 
-    MCode = MCode & "in" & vbCrLf
-    MCode = MCode & _
-        "    #""Grouped Rows"""
+        Case "Weekday"
+
+            MCode = MCode & _
+            "    WeekOrder = {""Monday"",""Tuesday"",""Wednesday"",""Thursday"",""Friday"",""Saturday"",""Sunday""}," & vbCrLf & _
+            "    AddIndex = Table.AddColumn(Grouped,""SortOrder"", each List.PositionOf(WeekOrder,[Trend]), Int64.Type)," & vbCrLf & _
+            "    Sorted = Table.Sort(AddIndex,{{""SortOrder"",Order.Ascending}})," & vbCrLf & _
+            "    Final = Table.RemoveColumns(Sorted,{""SortOrder""})" & vbCrLf & _
+            "in" & vbCrLf & _
+            "    Final"
+
+    End Select
 
     BuildTrendMCode = MCode
 
 End Function
 
-'==================================================
-' Updates One Trend Query
-'==================================================
-Sub UpdateTrendQuery(QueryName As String, trendType As String)
+'=========================================================
+' Update Trend Query
+'=========================================================
+Public Sub UpdateTrendQuery(ByVal TrendType As String)
 
-    UpdateQuery QueryName, BuildTrendMCode(trendType)
+    Dim QueryName As String
+
+    QueryName = "PQ_Trend_" & TrendType
+
+    UpdateQuery QueryName, BuildTrendMCode(TrendType)
 
 End Sub
 
-'==================================================
-' Updates All Selected Trend Queries
-'==================================================
-Sub GenerateAllTrendQueries()
+'=========================================================
+' Generate Selected Trend Queries
+'=========================================================
+Public Sub GenerateAllTrendQueries()
 
     Dim Trend As Variant
 
     ReadConfiguration
+    Debug.Print "SelectedDate = [" & SelectedDate & "]"
+Debug.Print "Trend Count = " & Trends.count
 
+    'No trend selected
     If Trends.count = 0 Then
-        MsgBox "Please select at least one Trend."
-        Exit Sub
+       ClearTrendQueries
+
+    MsgBox "No Trend Analysis selected.", vbInformation
+      Exit Sub
     End If
+
+    If Trim(SelectedDate) = "" Then
+
+    ClearTrendQueries
+
+    MsgBox "Trend analysis skipped because no Date column was selected.", vbInformation
+
+    Exit Sub
+
+End If
 
     For Each Trend In Trends
 
-        UpdateTrendQuery "PQ_Trend", CStr(Trend)
-
-        'RefreshTrendQuery "PQ_Trend"
-
-        Debug.Print Trend & " Updated"
+        UpdateTrendQuery CStr(Trend)
+        Debug.Print "Generated : PQ_Trend_" & Trend
 
     Next Trend
 
 End Sub
+Public Function BuildEmptyTrendMCode() As String
 
-Sub RefreshTrendQuery(QueryName As String)
+    BuildEmptyTrendMCode = _
+        "let" & vbCrLf & _
+        "    Source = PQ_RawData," & vbCrLf & _
+        "    EmptySource = Table.FirstN(Source,0)," & vbCrLf & _
+        "    AddTrend = Table.AddColumn(EmptySource,""Trend"", each null, type text)," & vbCrLf & _
+        "    AddMeasure = Table.AddColumn(AddTrend,""Measure"", each null, type number)," & vbCrLf & _
+        "    Final = Table.SelectColumns(AddMeasure,{""Trend"",""Measure""})" & vbCrLf & _
+        "in" & vbCrLf & _
+        "    Final"
 
-    Dim ws As Worksheet
-    Dim lo As ListObject
+End Function
+Public Sub ClearTrendQueries()
 
-    For Each ws In ThisWorkbook.Worksheets
+    Dim Trend As Variant
 
-        For Each lo In ws.ListObjects
+    For Each Trend In Array("Daily", "Monthly", "Weekday")
 
-            On Error Resume Next
+        UpdateQuery "PQ_Trend_" & Trend, BuildEmptyTrendMCode()
 
-            If lo.SourceType = xlSrcQuery Then
-
-                If lo.QueryTable.WorkbookConnection.Name = _
-                   "Query - " & QueryName Then
-
-                    lo.QueryTable.Refresh BackgroundQuery:=False
-                    Exit Sub
-
-                End If
-
-            End If
-
-            On Error GoTo 0
-
-        Next lo
-
-    Next ws
+    Next Trend
 
 End Sub
-

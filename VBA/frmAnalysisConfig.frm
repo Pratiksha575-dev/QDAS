@@ -22,45 +22,70 @@ Private Sub UserForm_Initialize()
     LoadMetadataToForm
     
     If cmbDate.ListCount > 0 Then
-    cmbDate.ListIndex = 0
+
+        cmbDate.ListIndex = 0
+
+        chkDaily.Enabled = True
+        chkMonthly.Enabled = True
+        chkWeekday.Enabled = True
+
+        chkDaily.value = True
+        chkMonthly.value = True
+        chkWeekday.value = True
+
+    Else
+
+        chkDaily.Enabled = False
+        chkMonthly.Enabled = False
+        chkWeekday.Enabled = False
+
+        chkDaily.value = False
+        chkMonthly.value = False
+        chkWeekday.value = False
+
     End If
 
     'Default selections
-    optIQR.Value = True
+    optIQR.value = True
 
-    chkDaily.Value = True
-    chkWeekly.Value = False
-    chkMonthly.Value = True
-    chkHourly.Value = False
-    chkWeekday.Value = True
 
     'ListBox properties
-    lstMeasures.MultiSelect = fmMultiSelectMulti
-    lstCategory.MultiSelect = fmMultiSelectMulti
+    lstMeasures.MultiSelect = fmMultiSelectSingle
+    lstCategory.MultiSelect = fmMultiSelectSingle
     
     cmdRun.Enabled = True
-    optAutoBins.Value = True
-    txtBins.Text = "20"
-    txtBins.Enabled = False
-    
 End Sub
 
 Private Sub cmdRun_Click()
 
+    'Measure validation
+    If lstMeasures.ListIndex = -1 Then
+        MsgBox "Please select a Measure.", vbExclamation, "Validation"
+        Exit Sub
+    End If
+
+    'Category validation
+    If lstCategory.ListIndex = -1 Then
+        MsgBox "Please select a Category.", vbExclamation, "Validation"
+        Exit Sub
+    End If
+
+    'Trend validation
+    'Trend validation (only if Trend options are enabled)
+If cmbDate.ListCount > 0 Then
+
+    If (chkDaily.value Or chkMonthly.value Or chkWeekday.value) _
+        And cmbDate.ListIndex = -1 Then
+
+        MsgBox "Please select a Date column for Trend Analysis.", _
+                vbExclamation, "Validation"
+
+        Exit Sub
+
+    End If
+
+End If
     SaveConfiguration
-
     RunAnalysis
-
-End Sub
-
-Private Sub optAutoBins_Click()
-
-    txtBins.Enabled = False
-
-End Sub
-
-Private Sub optCustomBins_Click()
-
-    txtBins.Enabled = True
 
 End Sub
